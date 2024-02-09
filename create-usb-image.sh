@@ -35,8 +35,8 @@ echo Install GRUB
 grub-install --removable --no-nvram --no-uefi-secure-boot --efi-directory=/mnt --boot-directory=/mnt/boot --target=x86_64-efi
 
 echo Download the FOG kernels and inits
-wget -P /mnt/boot/ https://github.com/FOGProject/fos/releases/download/$targetrelease/bzImage
-wget -P /mnt/boot/ https://github.com/FOGProject/fos/releases/download/$targetrelease/init.xz
+wget -P /mnt/boot/ https://github.com/geek-at/fos/releases/download/$targetrelease/bzImage
+wget -P /mnt/boot/ https://github.com/geek-at/fos/releases/download/$targetrelease/init.xz
 wget -P /mnt/boot/ https://github.com/FOGProject/fogproject/blob/dev-branch/packages/web/service/ipxe/memdisk
 wget -P /mnt/boot/ https://github.com/FOGProject/fogproject/blob/dev-branch/packages/web/service/ipxe/memtest.bin
 wget -P /mnt/boot/ https://github.com/FOGProject/fogproject/blob/dev-branch/packages/tftp/ipxe.krn
