@@ -3,7 +3,7 @@ name: Add USB Image to Release
 on:
   release:
     types:
-      - created
+      - published
 
 jobs:
   add-usb-image:
