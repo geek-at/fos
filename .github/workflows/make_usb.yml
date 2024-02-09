@@ -13,6 +13,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: show folder contents
+        run: ls -la
+
       - name: Create USB Image
         run: |
             sudo apt-get install grub-efi-amd64 parted kpartx
