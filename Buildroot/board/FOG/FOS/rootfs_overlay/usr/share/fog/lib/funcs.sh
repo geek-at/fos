@@ -79,10 +79,28 @@ verifyNetworkConnection() {
 }
 # Verifies that the OS is valid for resizing
 validResizeOS() {
-    [[ $osid != @([1-2]|4|[5-7]|9|50|51) ]] && handleError " * Invalid operating system id: $osname ($osid) (${FUNCNAME[0]})\n   Args Passed: $*"
+    [[ $osid != @([1-2]|4|[5-7]|9|10|11|50|51) ]] && handleError " * Invalid operating system id: $osname ($osid) (${FUNCNAME[0]})\n   Args Passed: $*"
+}
+# Gets the graphics information from the system
+getGraphics() {
+    local graphics_info=$(lshw -json -C display | jq -r '.[] | select(.vendor != null) | "\(.vendor),\(.product)"')
+
+    graphics_vendors_array=()
+    graphics_products_array=()
+    while IFS=',' read -r vendor product; do
+        graphics_vendors_array+=("$vendor")
+        graphics_products_array+=("$product")
+    done <<< "$graphics_info"
+
+    inventory_graphics_vendor=$(IFS=,; echo "${graphics_vendors_array[*]}")
+    inventory_graphics_product=$(IFS=,; echo "${graphics_products_array[*]}")
+
+    inventory_graphics_vendor64=$(echo "$inventory_graphics_vendor" | base64)
+    inventory_graphics_product64=$(echo "$inventory_graphics_product" | base64)
 }
 # Gets the information from the system for inventory
 doInventory() {
+    getGraphics
     sysman=$(dmidecode -s system-manufacturer)
     sysproduct=$(dmidecode -s system-product-name)
     sysversion=$(dmidecode -s system-version)
@@ -499,7 +517,7 @@ prepareUploadLocation() {
     echo "Done"
     debugPause
     dots "Setting permission on $imagePath"
-    chmod -R 777 $imagePath >/dev/null 2>&1
+    chmod -R 775 $imagePath >/dev/null 2>&1
     case $? in
         0)
             echo "Done"
@@ -665,7 +683,7 @@ shrinkPartition() {
                         resizePartition "$part" "$(calculate "$sizentfsresize*1024")" "$imagePath"
                         [[ $osid -eq 2 ]] && correctVistaMBR "$disk"
                         ;;
-                    [5-7]|9)
+                    [5-7]|9|10|11)
                         [[ $part_number -eq $win7partcnt ]] && part_start=$(blkid -po udev $part 2>/dev/null | awk -F= '/PART_ENTRY_OFFSET=/{printf("%.0f\n",$2*'$part_block_size'/1000)}') || part_start=1048576
                         if [[ -z $part_start || $part_start -lt 1 ]]; then
                             echo "Failed"
@@ -921,7 +939,7 @@ getValidRestorePartitions() {
             [1-2])
                 [[ ! -f $imagePath ]] && imgpart="$imagePath/d${disk_number}p${part_number}.img${split}" || imgpart="$imagePath"
                 ;;
-            4|[5-7]|9)
+            4|[5-7]|9|10|11)
                 [[ ! -f $imagePath/sys.img.000 ]] && imgpart="$imagePath/d${disk_number}p${part_number}.img${split}"
                 if [[ -z $imgpart ]]; then
                     case $win7partcnt in
@@ -1051,7 +1069,7 @@ changeHostname() {
             1)
                 regfile="$REG_LOCAL_MACHINE_XP"
                 ;;
-            2|4|[5-7]|9)
+            2|4|[5-7]|9|10|11)
                 regfile="$REG_LOCAL_MACHINE_7"
                 ;;
         esac
@@ -1208,7 +1226,7 @@ clearMountedDevices() {
         esac
     fi
     case $osid in
-        4|[5-7]|9)
+        4|[5-7]|9|10|11)
             local fstype=""
             fsTypeSetting "$part"
             REG_HOSTNAME_MOUNTED_DEVICES_7="\MountedDevices"
@@ -1268,7 +1286,7 @@ removePageFile() {
     fsTypeSetting "$part"
     [[ ! $ignorepg -eq 1 ]] && return
     case $osid in
-        [1-2]|4|[5-7]|[9]|50|51)
+        [1-2]|4|[5-7]|9|10|11|50|51)
             case $fstype in
                 ntfs)
                     dots "Mounting partition ($part)"
@@ -1379,6 +1397,14 @@ determineOS() {
             ;;
         9)
             osname="Windows 10"
+            mbrfile=""
+            ;;
+        10)
+            osname="Windows 11"
+            mbrfile=""
+            ;;
+        11)
+            osname="Windows Server"
             mbrfile=""
             ;;
         50)
@@ -1578,7 +1604,7 @@ findHDDInfo() {
 completeTasking() {
     case $type in
         up)
-            chmod -R 777 "$imagePath" >/dev/null 2>&1
+            chmod -R 775 "$imagePath" >/dev/null 2>&1
             killStatusReporter
             . /bin/fog.imgcomplete
             ;;
@@ -1589,7 +1615,7 @@ completeTasking() {
                 . ${postdownpath}fog.postdownload
             fi
             [[ $capone -eq 1 ]] && exit 0
-            if [[ $osid == +([1-2]|4|[5-7]|9) ]]; then
+            if [[ $osid == +([1-2]|4|[5-7]|9|10|11) ]]; then
                 for disk in $disks; do
                     getPartitions "$disk"
                     for part in $parts; do
@@ -1716,7 +1742,7 @@ handleError() {
     # Linux:
     if [[ -n $2 ]]; then
         case $osid in
-            [1-2]|4|[5-7]|9|50|51)
+            [1-2]|4|[5-7]|9|10|11|50|51)
                 if [[ -n "$hd" ]]; then
                     getPartitions "$hd"
                     for part in $parts; do
@@ -2367,7 +2393,7 @@ restorePartition() {
                 4|8|50|51|99)
                     imgpart="$imagePath/d${disk_number}p${part_number}.img${split}"
                     ;;
-                [5-7]|9)
+                [5-7]|9|10|11)
                     [[ ! -f $imagePath/sys.img.000 ]] && imgpart="$imagePath/d${disk_number}p${part_number}.img${split}"
                     if [[ -z $imgpart ]] ;then
                         [[ -r $imagePath/sys.img.000 ]] && win7partcnt=1
