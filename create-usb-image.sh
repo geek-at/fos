@@ -37,10 +37,10 @@ grub-install --removable --no-nvram --no-uefi-secure-boot --efi-directory=/mnt -
 echo Download the FOG kernels and inits
 wget -P /mnt/boot/ ${dl_url}/bzImage
 wget -P /mnt/boot/ ${dl_url}/init.xz
-wget -P /mnt/boot/ https://github.com/FOGProject/fogproject/blob/dev-branch/packages/web/service/ipxe/memdisk
-wget -P /mnt/boot/ https://github.com/FOGProject/fogproject/blob/dev-branch/packages/web/service/ipxe/memtest.bin
-wget -P /mnt/boot/ https://github.com/FOGProject/fogproject/blob/dev-branch/packages/tftp/ipxe.krn
-wget -P /mnt/boot/ https://github.com/FOGProject/fogproject/blob/dev-branch/packages/tftp/ipxe.efi
+wget -P /mnt/boot/ https://github.com/FOGProject/fogproject/raw/refs/heads/dev-branch/packages/web/service/ipxe/memdisk
+wget -P /mnt/boot/ https://github.com/FOGProject/fogproject/raw/refs/heads/dev-branch/packages/web/service/ipxe/memtest.bin
+wget -P /mnt/boot/ https://github.com/FOGProject/fogproject/raw/refs/heads/dev-branch/packages/tftp/ipxe.krn
+wget -P /mnt/boot/ https://github.com/FOGProject/fogproject/raw/refs/heads/dev-branch/packages/tftp/ipxe.efi
 
 cat > /mnt/boot/README.txt << 'EOF'
 
@@ -61,7 +61,7 @@ EOF
 echo Create the grub configuration file
 cat > /mnt/boot/grub/grub.cfg << 'EOF'
 
-set myfogip=http://change-this-to-your-fog-ip
+set myfogip=http://fog
 set myimage=/boot/bzImage
 set myinits=/boot/init.xz
 set myloglevel=4
